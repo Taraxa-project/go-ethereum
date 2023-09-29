@@ -38,8 +38,9 @@ const (
 	wsPingInterval     = 30 * time.Second
 	wsPingWriteTimeout = 5 * time.Second
 	wsPongTimeout      = 30 * time.Second
-	wsDefaultReadLimit = 32 * 1024 * 1024
 )
+
+var WsDefaultReadLimit = int64(100 * 1024 * 1024)
 
 var wsBufferPool = new(sync.Pool)
 
@@ -60,7 +61,7 @@ func (s *Server) WebsocketHandler(allowedOrigins []string) http.Handler {
 			log.Debug("WebSocket upgrade failed", "err", err)
 			return
 		}
-		codec := newWebsocketCodec(conn, r.Host, r.Header, wsDefaultReadLimit)
+		codec := newWebsocketCodec(conn, r.Host, r.Header, WsDefaultReadLimit)
 		s.ServeCodec(codec, 0)
 	})
 }
@@ -255,7 +256,7 @@ func newClientTransportWS(endpoint string, cfg *clientConfig) (reconnectFunc, er
 			}
 			return nil, hErr
 		}
-		messageSizeLimit := int64(wsDefaultReadLimit)
+		messageSizeLimit := int64(WsDefaultReadLimit)
 		if cfg.wsMessageSizeLimit != nil && *cfg.wsMessageSizeLimit >= 0 {
 			messageSizeLimit = *cfg.wsMessageSizeLimit
 		}
